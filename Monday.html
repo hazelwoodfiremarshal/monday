@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steve's Monday Countdown Timer</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow: hidden;
+        }
+        
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        /* Optional: Add floating particles for extra effect */
+        .particle {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            animation: float 8s infinite;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.5;
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-10vh) translateX(100px) scale(1.5);
+                opacity: 0;
+            }
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+            z-index: 2;
+            backdrop-filter: blur(5px);
+            margin-top: -120px; /* Moved the timer up by adding negative margin */
+        }
+        
+        .title {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .timer {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        
+        .time-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .time {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2196F3;
+            min-width: 60px;
+        }
+        
+        .label {
+            font-size: 16px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .message {
+            font-size: 18px;
+            color: #555;
+            margin-top: 10px;
+        }
+        
+        /* Steve positioned in lower left corner, half screen height */
+        .steve-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 50vh;
+            z-index: 1;
+        }
+        
+        .steve-container img {
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Steve's Monday Countdown Timer</h1>
+        <div class="timer">
+            <div class="time-block">
+                <div class="time" id="days">00</div>
+                <div class="label">Days</div>
+            </div>
+            <div class="time-block">
+                <div class="time" id="hours">00</div>
+                <div class="label">Hours</div>
+            </div>
+            <div class="time-block">
+                <div class="time" id="minutes">00</div>
+                <div class="label">Minutes</div>
+            </div>
+            <div class="time-block">
+                <div class="time" id="seconds">00</div>
+                <div class="label">Seconds</div>
+            </div>
+        </div>
+        <div class="message" id="message">Counting down to Monday 8:00 AM</div>
+    </div>
+
+    <div class="steve-container">
+        <img src="steve.png" alt="Steve">
+    </div>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Random size between 10px and 30px
+                const size = Math.random() * 20 + 10;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Random position
+                particle.style.left = `${Math.random() * 100}%`;
+                
+                // Random animation delay
+                particle.style.animationDelay = `${Math.random() * 8}s`;
+                
+                document.body.appendChild(particle);
+            }
+        }
+        
+        function getNextMonday8AM() {
+            const now = new Date();
+            const dayOfWeek = now.getDay();
+            
+            // Calculate days until next Monday (Sunday=0, Monday=1)
+            let daysUntilMonday = (1 - dayOfWeek + 7) % 7;
+            if (daysUntilMonday === 0 && now.getHours() >= 8) {
+                // If it's Monday but past 8AM, count to next Monday
+                daysUntilMonday = 7;
+            }
+            
+            // Set target date to next Monday at 8:00 AM
+            const targetDate = new Date(now);
+            targetDate.setDate(now.getDate() + daysUntilMonday);
+            targetDate.setHours(8, 0, 0, 0);
+            
+            return targetDate;
+        }
+        
+        function updateCountdown() {
+            const targetDate = getNextMonday8AM();
+            const now = new Date();
+            const difference = targetDate - now;
+            
+            // If the difference is negative, it means we've passed Monday 8AM
+            if (difference <= 0) {
+                // Get the next Monday
+                const nextMonday = getNextMonday8AM();
+                updateCountdown();
+                return;
+            }
+            
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+            
+            document.getElementById('days').textContent = days.toString().padStart(2, '0');
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            
+            // Update message based on proximity
+            if (days > 0) {
+                document.getElementById('message').textContent = `Counting down to Monday 8:00 AM`;
+            } else if (hours > 0) {
+                document.getElementById('message').textContent = `Monday 8:00 AM is coming today!`;
+            } else if (minutes > 0) {
+                document.getElementById('message').textContent = `Almost there! Monday 8:00 AM is soon`;
+            } else {
+                document.getElementById('message').textContent = `Monday 8:00 AM is very soon!`;
+            }
+        }
+        
+        // Initialize particles and update countdown
+        createParticles();
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
